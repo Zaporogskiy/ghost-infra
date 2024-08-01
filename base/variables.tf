@@ -20,7 +20,7 @@ variable "engineer_surname" {
 
 variable "region" {
   description = "aws region"
-  default     = "use1"
+  default     = "us-east-1"
 }
 
 variable "environment" {

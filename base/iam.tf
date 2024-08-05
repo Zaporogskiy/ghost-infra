@@ -36,7 +36,7 @@ resource "aws_iam_role_policy" "ghost_app_policy" {
   })
 }
 
-resource "aws_iam_instance_profile" "ghost_app_profile" {
+resource "aws_iam_instance_profile" "ghost_app" {
   name = "ghost_app"
   role = aws_iam_role.ghost_app_role.name
   tags = local.tags

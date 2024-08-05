@@ -16,6 +16,7 @@ resource "aws_security_group" "bastion" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  tags = local.tags
 }
 
 resource "aws_security_group" "alb" {
@@ -29,6 +30,7 @@ resource "aws_security_group" "alb" {
     protocol    = "tcp"
     cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
   }
+  tags = local.tags
 }
 
 resource "aws_security_group_rule" "alb_egress_to_ec2_pool" {
@@ -58,7 +60,7 @@ resource "aws_security_group" "ec2_pool" {
     protocol    = "tcp"
     cidr_blocks = [aws_vpc.cloudx.cidr_block]
   }
-
+  tags = local.tags
 }
 
 resource "aws_security_group_rule" "ec2_pool_ingress_from_alb" {
@@ -97,4 +99,5 @@ resource "aws_security_group" "efs" {
     protocol    = "-1"
     cidr_blocks = [aws_vpc.cloudx.cidr_block]
   }
+  tags = local.tags
 }

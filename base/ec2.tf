@@ -81,3 +81,36 @@ sudo -u ghost_user ghost start
 EOF_USER_DATA
   )
 }
+
+resource "aws_autoscaling_group" "ghost_ec2_pool" {
+  name = "ghost_ec2_pool"
+
+  launch_template {
+    id      = aws_launch_template.ghost_launch_template.id
+    version = "$Latest"
+  }
+
+  min_size = 1
+  max_size = 10
+
+  vpc_zone_identifier = [
+    aws_subnet.public_a.id,
+    aws_subnet.public_b.id,
+    aws_subnet.public_c.id
+  ]
+
+  target_group_arns = [aws_lb_target_group.ghost_ec2.arn]
+
+  health_check_type         = "ELB"
+  health_check_grace_period = 300
+
+  tag {
+    key                 = "Name"
+    value               = "ghost-instance"
+    propagate_at_launch = true
+  }
+
+  depends_on = [
+    aws_lb_target_group.ghost_ec2
+  ]
+}

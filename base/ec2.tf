@@ -41,7 +41,7 @@ adduser ghost_user
 usermod -aG wheel ghost_user
 cd /home/ghost_user/
 
-sudo -u ghost_user ghost install [4.12.1] local
+sudo -u ghost_user ghost install --version 4.12.1 --local
 
 ### EFS mount
 mkdir -p /home/ghost_user/ghost/content/data

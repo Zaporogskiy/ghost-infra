@@ -60,16 +60,13 @@ resource "aws_security_group" "ec2_pool" {
     protocol    = "tcp"
     cidr_blocks = [aws_vpc.cloudx.cidr_block]
   }
-  tags = local.tags
-}
 
-resource "aws_security_group_rule" "ec2_pool_ingress_from_alb" {
-  type                     = "ingress"
-  from_port                = 2368
-  to_port                  = 2368
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.ec2_pool.id
-  source_security_group_id = aws_security_group.alb.id
+  ingress {
+    from_port                = 2368
+    to_port                  = 2368
+    protocol                 = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
 }
 
 resource "aws_security_group_rule" "ec2_pool_egress" {

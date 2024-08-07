@@ -3,7 +3,7 @@ resource "aws_launch_template" "ghost_launch_template" {
   name          = "ghost"
   image_id      = data.aws_ami.amazon_linux.id
   instance_type = "t2.micro"
-  key_name      = aws_key_pair.ghost_ec2_pool.key_name
+  key_name      = data.aws_key_pair.ghost_ec2_pool.key_name
 
   vpc_security_group_ids = [aws_security_group.ec2_pool.id]
   iam_instance_profile {
@@ -113,4 +113,17 @@ resource "aws_autoscaling_group" "ghost_ec2_pool" {
   depends_on = [
     aws_lb_target_group.ghost_ec2
   ]
+}
+
+resource "aws_instance" "bastion" {
+  ami                         = data.aws_ami.amazon_linux.id
+  instance_type               = "t2.micro"
+  associate_public_ip_address = true
+  key_name                    = data.aws_key_pair.ghost_ec2_pool.key_name
+  vpc_security_group_ids      = [aws_security_group.bastion.id]
+  subnet_id                   = aws_subnet.public_a.id
+
+  tags = merge(local.tags, {
+    Name = "bastion"
+  })
 }

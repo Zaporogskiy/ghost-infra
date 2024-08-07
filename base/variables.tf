@@ -1,7 +1,3 @@
-variable "ssh_key" {
-  description = "Provides custom public SSH key"
-  type        = string
-}
 
 variable "project_name" {
   description = "name of the project"

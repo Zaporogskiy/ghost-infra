@@ -45,6 +45,10 @@ resource "aws_internet_gateway" "cloudx_igw" {
 
 resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.cloudx.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.cloudx_igw.id
+  }
 
   tags = merge(local.tags, {
     Name = "public_rt"

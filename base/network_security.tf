@@ -19,7 +19,7 @@ resource "aws_security_group" "bastion" {
   tags = local.tags
 }
 
-resource "aws_security_group" "alb" {
+resource "aws_security_group" "alb_sg" {
   name        = "alb"
   description = "allows access to alb"
   vpc_id      = aws_vpc.cloudx.id
@@ -38,11 +38,11 @@ resource "aws_security_group_rule" "alb_egress_to_ec2_pool" {
   from_port                = 0
   to_port                  = 0
   protocol                 = "-1"
-  security_group_id        = aws_security_group.alb.id
-  source_security_group_id = aws_security_group.ec2_pool.id
+  security_group_id        = aws_security_group.alb_sg.id
+  source_security_group_id = aws_security_group.ec2_pool_sg.id
 }
 
-resource "aws_security_group" "ec2_pool" {
+resource "aws_security_group" "ec2_pool_sg" {
   name        = "ec2_pool"
   description = "allows access to ec2 instances"
   vpc_id      = aws_vpc.cloudx.id
@@ -65,7 +65,7 @@ resource "aws_security_group" "ec2_pool" {
     from_port       = 2368
     to_port         = 2368
     protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
+    security_groups = [aws_security_group.alb_sg.id]
   }
 
   egress {
@@ -85,7 +85,7 @@ resource "aws_security_group" "efs" {
     from_port       = 2049
     to_port         = 2049
     protocol        = "tcp"
-    security_groups = [aws_security_group.ec2_pool.id]
+    security_groups = [aws_security_group.ec2_pool_sg.id]
   }
 
   egress {

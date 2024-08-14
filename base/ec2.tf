@@ -5,7 +5,11 @@ resource "aws_launch_template" "ghost_launch_template" {
   instance_type = "t2.micro"
   key_name      = data.aws_key_pair.ghost_ec2_pool.key_name
 
-  vpc_security_group_ids = [aws_security_group.ec2_pool.id]
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = [aws_security_group.ec2_pool_sg.id]
+  }
+
   iam_instance_profile {
     name = aws_iam_instance_profile.ghost_app.name
   }
@@ -21,10 +25,12 @@ resource "aws_launch_template" "ghost_launch_template" {
     create_before_destroy = true
   }
 
-  user_data = base64encode(file("${path.module}/user_data.sh"))
+  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
+    LB_DNS_NAME = aws_lb.alb_ghost.dns_name
+  }))
 }
 
-resource "aws_autoscaling_group" "ghost_ec2_pool" {
+resource "aws_autoscaling_group" "ghost_ec2_pool_asg" {
   name = "ghost_ec2_pool"
 
   launch_template {
@@ -41,7 +47,7 @@ resource "aws_autoscaling_group" "ghost_ec2_pool" {
     aws_subnet.public_c.id
   ]
 
-  target_group_arns = [aws_lb_target_group.ghost_ec2.arn]
+  target_group_arns = [aws_lb_target_group.ghost_ec2_tg.arn]
 
   health_check_type         = "ELB"
   health_check_grace_period = 300
@@ -53,7 +59,7 @@ resource "aws_autoscaling_group" "ghost_ec2_pool" {
   }
 
   depends_on = [
-    aws_lb_target_group.ghost_ec2
+    aws_lb_target_group.ghost_ec2_tg
   ]
 }
 

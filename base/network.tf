@@ -74,14 +74,14 @@ resource "aws_lb" "alb_ghost" {
   name               = "alb-ghost"
   load_balancer_type = "application"
   subnets            = [aws_subnet.public_a.id, aws_subnet.public_b.id, aws_subnet.public_c.id]
-  security_groups    = [aws_security_group.alb.id]
+  security_groups    = [aws_security_group.alb_sg.id]
 
   tags = merge(local.tags, {
     Name = "alb-ghost"
   })
 }
 
-resource "aws_lb_target_group" "ghost_ec2" {
+resource "aws_lb_target_group" "ghost_ec2_tg" {
   name     = "ghost-ec2"
   port     = 2368
   protocol = "HTTP"
@@ -89,7 +89,7 @@ resource "aws_lb_target_group" "ghost_ec2" {
 
   health_check {
     enabled             = true
-    interval            = 30
+    interval            = 10
     path                = "/"
     protocol            = "HTTP"
     timeout             = 5
@@ -110,7 +110,7 @@ resource "aws_lb_listener" "alb_listener" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.ghost_ec2.arn
+    target_group_arn = aws_lb_target_group.ghost_ec2_tg.arn
   }
   tags = local.tags
 }
@@ -124,7 +124,7 @@ resource "aws_lb_listener_rule" "listener_rule" {
 
     forward {
       target_group {
-        arn    = aws_lb_target_group.ghost_ec2.arn
+        arn    = aws_lb_target_group.ghost_ec2_tg.arn
         weight = 100
       }
 

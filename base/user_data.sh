@@ -5,7 +5,8 @@ exec > >(tee /var/log/cloud-init-output.log|logger -t user-data -s 2>/dev/consol
 export LB_DNS_NAME='${LB_DNS_NAME}'
 ###
 
-REGION=$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/[a-z]$//')
+TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
+REGION=$(/usr/bin/curl http://169.254.169.254/latest/meta-data/placement/region -H "X-aws-ec2-metadata-token: $TOKEN")
 EFS_ID=$(aws efs describe-file-systems --query 'FileSystems[?Name==`ghost_content`].FileSystemId' --region $REGION --output text)
 
 ### Install pre-reqs

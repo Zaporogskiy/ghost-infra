@@ -9,7 +9,7 @@ REGION=$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/placement/avai
 EFS_ID=$(aws efs describe-file-systems --query 'FileSystems[?Name==`ghost_content`].FileSystemId' --region $REGION --output text)
 
 ### Install pre-reqs
-curl -sL https://rpm.nodesource.com/setup_18.x | sudo bash -
+curl -sL https://rpm.nodesource.com/setup_20.x | sudo bash -
 yum install -y nodejs amazon-efs-utils
 npm install ghost-cli@latest -g
 
@@ -17,7 +17,7 @@ adduser ghost_user
 usermod -aG wheel ghost_user
 cd /home/ghost_user/
 
-sudo -u ghost_user ghost install [4.12.1] local
+sudo -u ghost_user ghost install [5.82.3] local
 
 ### EFS mount
 mkdir -p /home/ghost_user/ghost/content/data

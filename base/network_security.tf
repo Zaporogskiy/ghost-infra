@@ -33,15 +33,6 @@ resource "aws_security_group" "alb_sg" {
   tags = local.tags
 }
 
-resource "aws_security_group_rule" "alb_egress_to_ec2_pool" {
-  type                     = "egress"
-  from_port                = 0
-  to_port                  = 0
-  protocol                 = "-1"
-  security_group_id        = aws_security_group.alb_sg.id
-  source_security_group_id = aws_security_group.ec2_pool_sg.id
-}
-
 resource "aws_security_group" "ec2_pool_sg" {
   name        = "ec2_pool"
   description = "allows access to ec2 instances"
@@ -55,10 +46,10 @@ resource "aws_security_group" "ec2_pool_sg" {
   }
 
   ingress {
-    from_port   = 2049
-    to_port     = 2049
+    from_port   = 22
+    to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [aws_vpc.cloudx.cidr_block]
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
   }
 
   ingress {
@@ -68,12 +59,35 @@ resource "aws_security_group" "ec2_pool_sg" {
     security_groups = [aws_security_group.alb_sg.id]
   }
 
+  ingress {
+    from_port   = 2368
+    to_port     = 2368
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.cloudx.cidr_block]
+  }
+
+  ingress {
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.cloudx.cidr_block]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+resource "aws_security_group_rule" "alb_egress_to_ec2_pool" {
+  type                     = "egress"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
+  security_group_id        = aws_security_group.alb_sg.id
+  source_security_group_id = aws_security_group.ec2_pool_sg.id
 }
 
 resource "aws_security_group" "efs" {

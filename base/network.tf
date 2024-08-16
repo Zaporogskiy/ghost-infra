@@ -88,8 +88,9 @@ resource "aws_lb_target_group" "ghost_ec2_tg" {
   vpc_id   = aws_vpc.cloudx.id
 
   health_check {
+    port                = "2368"
     enabled             = true
-    interval            = 10
+    interval            = 30
     path                = "/"
     protocol            = "HTTP"
     timeout             = 5

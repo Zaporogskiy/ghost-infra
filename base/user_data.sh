@@ -24,6 +24,12 @@ sudo -u ghost_user ghost install [5.82.3] local
 mkdir -p /home/ghost_user/ghost/content/data
 mount -t efs -o tls $EFS_ID:/ /home/ghost_user/ghost/content
 
+sudo chown -R ghost_user:ghost_user /home/ghost_user/ghost/content
+sudo chmod -R 777 /home/ghost_user/ghost/content
+
+sudo chown -R ghost_user:ghost_user /home/ghost_user/ghost/content/data
+sudo chmod -R 777 /home/ghost_user/ghost/content/data
+
 cat << EOF > config.development.json
 
 {

@@ -90,12 +90,12 @@ resource "aws_lb_target_group" "ghost_ec2_tg" {
   health_check {
     port                = "2368"
     enabled             = true
-    interval            = 30
+    interval            = 50
     path                = "/"
     protocol            = "HTTP"
-    timeout             = 5
+    timeout             = 30
     healthy_threshold   = 2
-    unhealthy_threshold = 2
+    unhealthy_threshold = 5
     matcher             = "200"
   }
 

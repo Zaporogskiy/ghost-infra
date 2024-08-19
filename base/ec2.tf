@@ -1,8 +1,8 @@
 
 resource "aws_launch_template" "ghost_launch_template" {
   name          = "ghost"
-  image_id      = data.aws_ami.amazon_linux.id
-  instance_type = "t3.small"
+  image_id      = data.aws_ami.amazon_linux_x86_64.id
+  instance_type = "t3.micro"
   key_name      = data.aws_key_pair.ghost_ec2_pool.key_name
 
   network_interfaces {
@@ -64,7 +64,7 @@ resource "aws_autoscaling_group" "ghost_ec2_pool_asg" {
 }
 
 resource "aws_instance" "bastion" {
-  ami                         = data.aws_ami.amazon_linux.id
+  ami                         = data.aws_ami.amazon_linux_x86_64.id
   instance_type               = "t2.micro"
   associate_public_ip_address = true
   key_name                    = data.aws_key_pair.ghost_ec2_pool.key_name

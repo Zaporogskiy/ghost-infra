@@ -2,13 +2,23 @@
 resource "aws_launch_template" "ghost_launch_template" {
   name          = "ghost"
   image_id      = data.aws_ami.amazon_linux_x86_64.id
-  instance_type = "t3.micro"
+  instance_type = "t3.small"
   key_name      = data.aws_key_pair.ghost_ec2_pool.key_name
+  vpc_security_group_ids = [aws_security_group.ec2_pool_sg.id]
 
-  network_interfaces {
-    associate_public_ip_address = true
-    security_groups             = [aws_security_group.ec2_pool_sg.id]
-  }
+  // todo affected version of the application
+#  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
+#    LB_DNS_NAME = aws_lb.alb_ghost.dns_name
+#  }))
+  user_data = base64encode(<<-EOF
+                #!/bin/bash
+                yum install -y httpd
+                echo "Listen 2368" > /etc/httpd/conf.d/listen.conf
+                echo "Hello from Artem's Server!" > /var/www/html/index.html
+                systemctl start httpd
+                systemctl enable httpd
+                EOF
+  )
 
   iam_instance_profile {
     name = aws_iam_instance_profile.ghost_app.name
@@ -20,14 +30,6 @@ resource "aws_launch_template" "ghost_launch_template" {
       Name = "ghost-instance"
     })
   }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
-    LB_DNS_NAME = aws_lb.alb_ghost.dns_name
-  }))
 }
 
 resource "aws_autoscaling_group" "ghost_ec2_pool_asg" {
@@ -38,8 +40,9 @@ resource "aws_autoscaling_group" "ghost_ec2_pool_asg" {
     version = "$Latest"
   }
 
-  min_size = 1
-  max_size = 10
+  min_size         = 1
+  max_size         = 3
+  desired_capacity = 2
 
   vpc_zone_identifier = [
     aws_subnet.public_a.id,
@@ -57,10 +60,6 @@ resource "aws_autoscaling_group" "ghost_ec2_pool_asg" {
     value               = "ghost-instance"
     propagate_at_launch = true
   }
-
-  depends_on = [
-    aws_lb_target_group.ghost_ec2_tg
-  ]
 }
 
 resource "aws_instance" "bastion" {

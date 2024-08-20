@@ -51,7 +51,7 @@ resource "aws_security_group" "alb_sg" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
   }
 
   egress {
@@ -78,7 +78,7 @@ resource "aws_security_group" "ec2_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
   }
 
   egress {
@@ -117,38 +117,19 @@ resource "aws_lb_target_group" "tg" {
   port     = 2368
   protocol = "HTTP"
   vpc_id   = aws_vpc.artem_test_vpc.id
+  target_type = "instance"
+  slow_start  = "600"
 
   health_check {
     enabled             = true
     path                = "/"
     protocol            = "HTTP"
     port                = "traffic-port"
-    healthy_threshold   = 5
-    unhealthy_threshold = 2
+    healthy_threshold   = 2
+    unhealthy_threshold = 5
     timeout             = 5
     interval            = 60
     matcher             = "200"
-  }
-}
-
-# Create an EC2 instance with an HTTP server
-resource "aws_instance" "web" {
-  ami             = data.aws_ami.amazon_linux_x86_64.id
-  instance_type   = "t2.micro"
-  subnet_id       = aws_subnet.public_subnet_1.id
-  security_groups = [aws_security_group.ec2_sg.id]
-  key_name        = data.aws_key_pair.ghost_ec2_pool.key_name
-
-  user_data = <<-EOF
-                #!/bin/bash
-                yum install -y httpd
-                echo "Listen 2368" > /etc/httpd/conf.d/listen.conf
-                echo "Hello from Artem's Server!" > /var/www/html/index.html
-                systemctl start httpd
-                systemctl enable httpd
-                EOF
-  tags = {
-    Name = "HTTP Server"
   }
 }
 
@@ -194,6 +175,8 @@ resource "aws_autoscaling_group" "web_asg" {
   vpc_zone_identifier = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
 
   target_group_arns = [aws_lb_target_group.tg.arn]
+  health_check_type         = "ELB"
+  health_check_grace_period = 300
 
   tag {
     key                 = "Name"

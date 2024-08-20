@@ -3,9 +3,6 @@ locals {
   public_subnet_1     = "${var.environment}-${var.project_name}-${var.region}-public-001"
   public_subnet_2     = "${var.environment}-${var.project_name}-${var.region}-public-002"
   public_subnet_3     = "${var.environment}-${var.project_name}-${var.region}-public-003"
-  availability_zone_a = "${var.region}a"
-  availability_zone_b = "${var.region}b"
-  availability_zone_c = "${var.region}c"
 
   tags = {
     Project = var.project_name

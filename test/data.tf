@@ -16,3 +16,7 @@ data "aws_ami" "amazon_linux_x86_64" {
 data "aws_key_pair" "ghost_ec2_pool" {
   key_name = "ghost-ec2-pool"
 }
+
+data "http" "myip" {
+  url = "https://api.ipify.org"
+}

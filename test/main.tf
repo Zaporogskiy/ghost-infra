@@ -152,13 +152,52 @@ resource "aws_instance" "web" {
   }
 }
 
-resource "aws_lb_target_group_attachment" "tg_attachment" {
-  target_group_arn = aws_lb_target_group.tg.arn
-  target_id        = aws_instance.web.id
-  port             = 2368
-}
-
 # Output the DNS of the load balancer
 output "alb_dns_name" {
   value = aws_lb.artem_test_alb.dns_name
+}
+
+resource "aws_launch_template" "web_lt" {
+  name_prefix   = "web-lt-"
+  image_id      = data.aws_ami.amazon_linux_x86_64.id
+  instance_type = "t2.micro"
+  key_name      = data.aws_key_pair.ghost_ec2_pool.key_name
+
+  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
+
+  user_data = base64encode(<<-EOF
+                #!/bin/bash
+                yum install -y httpd
+                echo "Listen 2368" > /etc/httpd/conf.d/listen.conf
+                echo "Hello from Artem's Server!" > /var/www/html/index.html
+                systemctl start httpd
+                systemctl enable httpd
+                EOF
+  )
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "HTTP Server"
+    }
+  }
+}
+
+resource "aws_autoscaling_group" "web_asg" {
+  launch_template {
+    id      = aws_launch_template.web_lt.id
+    version = "$Latest"
+  }
+  min_size         = 1
+  max_size         = 3
+  desired_capacity = 2
+  vpc_zone_identifier = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
+
+  target_group_arns = [aws_lb_target_group.tg.arn]
+
+  tag {
+    key                 = "Name"
+    value               = "HTTP Server ASG"
+    propagate_at_launch = true
+  }
 }

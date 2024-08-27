@@ -22,3 +22,17 @@ resource "aws_efs_mount_target" "mount_target_c" {
   subnet_id       = aws_subnet.public_c.id
   security_groups = [aws_security_group.efs.id]
 }
+
+resource "aws_db_instance" "ghost" {
+  identifier        = "ghost"
+  instance_class    = "db.t2.micro"
+  engine            = "mysql"
+  engine_version    = "8.0"
+  storage_type      = "gp2"
+  allocated_storage = 20
+
+  db_subnet_group_name = aws_db_subnet_group.ghost.name
+  vpc_security_group_ids = [aws_security_group.mysql.id]
+
+  tags = local.tags
+}

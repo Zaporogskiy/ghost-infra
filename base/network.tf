@@ -174,3 +174,11 @@ resource "aws_lb_listener" "alb_listener" {
   }
   tags = local.tags
 }
+
+resource "aws_db_subnet_group" "ghost" {
+  name        = "ghost"
+  description = "ghost database subnet group"
+  subnet_ids  = [aws_subnet.private_db_a.id, aws_subnet.private_db_b.id, aws_subnet.private_db_c.id]
+
+  tags = local.tags
+}

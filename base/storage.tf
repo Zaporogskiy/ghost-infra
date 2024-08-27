@@ -31,15 +31,15 @@ resource "aws_db_instance" "ghost" {
   storage_type      = "gp2"
   allocated_storage = 20
 
-  db_subnet_group_name = aws_db_subnet_group.ghost.name
+  db_subnet_group_name   = aws_db_subnet_group.ghost.name
   vpc_security_group_ids = [aws_security_group.mysql.id]
 
   tags = local.tags
 }
 
 resource "random_password" "db_password" {
-  length  = 16
-  special = true
+  length           = 16
+  special          = true
   override_special = "_%@"
 }
 

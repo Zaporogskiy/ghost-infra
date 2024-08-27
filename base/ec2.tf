@@ -1,15 +1,15 @@
 
 resource "aws_launch_template" "ghost_launch_template" {
-  name          = "ghost"
-  image_id      = data.aws_ami.amazon_linux_x86_64.id
-  instance_type = "t3.small"
-  key_name      = data.aws_key_pair.ghost_ec2_pool.key_name
+  name                   = "ghost"
+  image_id               = data.aws_ami.amazon_linux_x86_64.id
+  instance_type          = "t3.small"
+  key_name               = data.aws_key_pair.ghost_ec2_pool.key_name
   vpc_security_group_ids = [aws_security_group.ec2_pool_sg.id]
 
   // todo affected version of the application
-#  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
-#    LB_DNS_NAME = aws_lb.alb_ghost.dns_name
-#  }))
+  #  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
+  #    LB_DNS_NAME = aws_lb.alb_ghost.dns_name
+  #  }))
   user_data = base64encode(<<-EOF
                 #!/bin/bash
                 yum install -y httpd

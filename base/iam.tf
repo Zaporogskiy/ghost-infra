@@ -43,6 +43,15 @@ resource "aws_iam_role_policy" "ghost_app_policy" {
         ],
         Effect   = "Allow",
         Resource = "*"
+      },
+      {
+        Action = [
+          "ssm:GetParameter*",
+          "secretsmanager:GetSecretValue",
+          "kms:Decrypt"
+        ],
+        Effect   = "Allow",
+        Resource = "*"
       }
     ]
   })

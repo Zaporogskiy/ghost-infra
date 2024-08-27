@@ -14,3 +14,7 @@ provider "aws" {
 
 provider "http" {
 }
+
+provider "random" {
+  version = "~> 3.0"
+}

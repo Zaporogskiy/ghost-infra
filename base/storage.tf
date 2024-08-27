@@ -36,3 +36,17 @@ resource "aws_db_instance" "ghost" {
 
   tags = local.tags
 }
+
+resource "random_password" "db_password" {
+  length  = 16
+  special = true
+  override_special = "_%@"
+}
+
+resource "aws_ssm_parameter" "db_password" {
+  name  = "/ghost/dbpassw"
+  type  = "SecureString"
+  value = random_password.db_password.result
+
+  tags = local.tags
+}

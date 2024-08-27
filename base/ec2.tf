@@ -12,7 +12,8 @@ resource "aws_launch_template" "ghost_launch_template" {
   #  }))
 
     user_data = base64encode(templatefile("${path.module}/user_data_custom.sh", {
-      LB_DNS_NAME = aws_lb.alb_ghost.dns_name
+      DB_HOST = aws_db_instance.ghost.address,
+      DB_NAME = aws_db_instance.ghost.db_name,
     }))
 
   iam_instance_profile {

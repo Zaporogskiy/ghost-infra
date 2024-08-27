@@ -30,8 +30,8 @@ resource "aws_db_instance" "ghost" {
   engine_version    = "8.0"
   storage_type      = "gp2"
   allocated_storage = 20
-  username = "rootroot"
-  password = "rootroot"
+  username = aws_ssm_parameter.db_username.value
+  password = aws_ssm_parameter.db_password.value
   db_name = "ghostdb"
   skip_final_snapshot = true
 

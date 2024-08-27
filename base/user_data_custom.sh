@@ -1,33 +1,29 @@
 #!/bin/bash
-# Update all packages
+
+export DB_HOST="${DB_HOST}"
+export DB_NAME="${DB_NAME}"
+
+DB_USER=$(aws ssm get-parameter --name "/ghost/username" --with-decryption --query "Parameter.Value" --output text)
+DB_PASSWORD=$(aws ssm get-parameter --name "/ghost/dbpassw" --with-decryption --query "Parameter.Value" --output text)
+if [ -z "$DB_USER" ] || [ -z "$DB_PASSWORD" ]; then
+  echo "Failed to retrieve DB credentials."
+  exit 1
+fi
+
 sudo dnf update -y
-
-# Install Apache HTTP Server
 sudo dnf install -y httpd
+sudo dnf install -y mariadb105
 
-# Configure Apache to listen on port 2368
 echo "Listen 2368" > /etc/httpd/conf.d/listen.conf
-
-# Set the default web page
 echo "Hello from Artem's Server!" > /var/www/html/index.html
-
-# Start the httpd service
 systemctl start httpd
-
-# Enable httpd to start on boot
 systemctl enable httpd
 
-# Open port 2368 on the firewall
 firewall-cmd --permanent --add-port=2368/tcp
 firewall-cmd --reload
 
-# Verify and display status of port 2368, check if it's listening
 echo "Checking port 2368 status:"
 netstat -tuln | grep ":2368"
 
-# Install MariaDB client
-sudo dnf install -y mariadb105
-
-# Try to connect to RDS MySQL
 echo "Attempting to connect to RDS MySQL..."
-mysql -h ghost.cd5ktj5z6krz.us-east-1.rds.amazonaws.com -P 3306 -u rootroot -prootroot -D ghostdb -e "STATUS;" && echo "Connection to RDS MySQL successful." || echo "Failed to connect to RDS MySQL."
+mysql -h "$DB_HOST" -P 3306 -u "$DB_USER" -p"$DB_PASSWORD" -D "$DB_NAME" -e "STATUS;" && echo "Connection to RDS MySQL successful." || echo "Failed to connect to RDS MySQL."

@@ -25,11 +25,14 @@ resource "aws_efs_mount_target" "mount_target_c" {
 
 resource "aws_db_instance" "ghost" {
   identifier        = "ghost"
-  instance_class    = "db.t2.micro"
+  instance_class    = "db.t3.micro"
   engine            = "mysql"
   engine_version    = "8.0"
   storage_type      = "gp2"
   allocated_storage = 20
+  username = "rootroot"
+  password = "rootroot"
+  db_name = "ghostdb"
 
   db_subnet_group_name   = aws_db_subnet_group.ghost.name
   vpc_security_group_ids = [aws_security_group.mysql.id]
@@ -41,6 +44,14 @@ resource "random_password" "db_password" {
   length           = 16
   special          = true
   override_special = "_%@"
+}
+
+resource "aws_ssm_parameter" "db_username" {
+  name  = "/ghost/username"
+  type  = "SecureString"
+  value = random_password.db_password.result
+
+  tags = local.tags
 }
 
 resource "aws_ssm_parameter" "db_password" {

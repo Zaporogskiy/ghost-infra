@@ -10,15 +10,10 @@ resource "aws_launch_template" "ghost_launch_template" {
   #  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
   #    LB_DNS_NAME = aws_lb.alb_ghost.dns_name
   #  }))
-  user_data = base64encode(<<-EOF
-                #!/bin/bash
-                yum install -y httpd
-                echo "Listen 2368" > /etc/httpd/conf.d/listen.conf
-                echo "Hello from Artem's Server!" > /var/www/html/index.html
-                systemctl start httpd
-                systemctl enable httpd
-                EOF
-  )
+
+    user_data = base64encode(templatefile("${path.module}/user_data_custom.sh", {
+      LB_DNS_NAME = aws_lb.alb_ghost.dns_name
+    }))
 
   iam_instance_profile {
     name = aws_iam_instance_profile.ghost_app.name

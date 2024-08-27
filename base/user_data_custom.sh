@@ -1,6 +1,9 @@
 #!/bin/bash
-# Install Apache HTTP server
-yum install -y httpd
+# Update all packages
+sudo dnf update -y
+
+# Install Apache HTTP Server
+sudo dnf install -y httpd
 
 # Configure Apache to listen on port 2368
 echo "Listen 2368" > /etc/httpd/conf.d/listen.conf
@@ -21,3 +24,10 @@ firewall-cmd --reload
 # Verify and display status of port 2368, check if it's listening
 echo "Checking port 2368 status:"
 netstat -tuln | grep ":2368"
+
+# Install MariaDB client
+sudo dnf install -y mariadb105
+
+# Try to connect to RDS MySQL
+echo "Attempting to connect to RDS MySQL..."
+mysql -h ghost.cd5ktj5z6krz.us-east-1.rds.amazonaws.com -P 3306 -u rootroot -prootroot -D ghostdb -e "STATUS;" && echo "Connection to RDS MySQL successful." || echo "Failed to connect to RDS MySQL."

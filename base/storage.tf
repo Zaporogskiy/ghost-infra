@@ -33,6 +33,7 @@ resource "aws_db_instance" "ghost" {
   username = "rootroot"
   password = "rootroot"
   db_name = "ghostdb"
+  skip_final_snapshot = true
 
   db_subnet_group_name   = aws_db_subnet_group.ghost.name
   vpc_security_group_ids = [aws_security_group.mysql.id]

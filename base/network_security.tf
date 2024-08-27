@@ -102,3 +102,27 @@ resource "aws_security_group" "efs" {
   }
   tags = local.tags
 }
+
+resource "aws_security_group" "mysql" {
+  name        = "mysql"
+  description = "defines access to ghost db"
+  vpc_id      = aws_vpc.cloudx.id
+
+  # Ingress rule
+  ingress {
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ec2_pool_sg.id]
+  }
+
+  # Default egress rule to allow all outbound traffic
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = local.tags
+}

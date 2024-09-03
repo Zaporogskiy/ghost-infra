@@ -2,7 +2,7 @@
 resource "aws_launch_template" "ghost_launch_template" {
   name                   = "ghost"
   image_id               = data.aws_ami.amazon_linux_x86_64.id
-  instance_type          = "t3.small"
+  instance_type          = "t2.micro"
   key_name               = data.aws_key_pair.ghost_ec2_pool.key_name
   vpc_security_group_ids = [aws_security_group.ec2_pool_sg.id]
 

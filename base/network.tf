@@ -52,7 +52,7 @@ resource "aws_subnet" "private_db_a" {
   availability_zone       = "us-east-1a"
   map_public_ip_on_launch = false
   tags = merge(local.tags, {
-    Name = local.private_subnet_1
+    Name = local.private_db_subnet_1
   })
 }
 
@@ -62,13 +62,43 @@ resource "aws_subnet" "private_db_b" {
   availability_zone       = "us-east-1b"
   map_public_ip_on_launch = false
   tags = merge(local.tags, {
-    Name = local.private_subnet_2
+    Name = local.private_db_subnet_2
   })
 }
 
 resource "aws_subnet" "private_db_c" {
   vpc_id                  = aws_vpc.cloudx.id
   cidr_block              = "10.10.22.0/24"
+  availability_zone       = "us-east-1c"
+  map_public_ip_on_launch = false
+  tags = merge(local.tags, {
+    Name = local.private_db_subnet_3
+  })
+}
+
+resource "aws_subnet" "private_a" {
+  vpc_id                  = aws_vpc.cloudx.id
+  cidr_block              = "10.10.10.0/24"
+  availability_zone       = "us-east-1a"
+  map_public_ip_on_launch = false
+  tags = merge(local.tags, {
+    Name = local.private_subnet_1
+  })
+}
+
+resource "aws_subnet" "private_b" {
+  vpc_id                  = aws_vpc.cloudx.id
+  cidr_block              = "10.10.11.0/24"
+  availability_zone       = "us-east-1b"
+  map_public_ip_on_launch = false
+  tags = merge(local.tags, {
+    Name = local.private_subnet_2
+  })
+}
+
+resource "aws_subnet" "private_c" {
+  vpc_id                  = aws_vpc.cloudx.id
+  cidr_block              = "10.10.12.0/24"
   availability_zone       = "us-east-1c"
   map_public_ip_on_launch = false
   tags = merge(local.tags, {
@@ -109,6 +139,21 @@ resource "aws_route_table_association" "public_b_association" {
 resource "aws_route_table_association" "public_c_association" {
   subnet_id      = aws_subnet.public_c.id
   route_table_id = aws_route_table.public_rt.id
+}
+
+resource "aws_route_table_association" "private_a_association" {
+  subnet_id      = aws_subnet.private_a.id
+  route_table_id = aws_route_table.private_rt.id
+}
+
+resource "aws_route_table_association" "private_b_association" {
+  subnet_id      = aws_subnet.private_b.id
+  route_table_id = aws_route_table.private_rt.id
+}
+
+resource "aws_route_table_association" "private_c_association" {
+  subnet_id      = aws_subnet.private_c.id
+  route_table_id = aws_route_table.private_rt.id
 }
 
 resource "aws_route_table_association" "private_db_a_association" {

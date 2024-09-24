@@ -24,15 +24,15 @@ resource "aws_efs_mount_target" "mount_target_c" {
 }
 
 resource "aws_db_instance" "ghost" {
-  identifier        = "ghost"
-  instance_class    = "db.t3.micro"
-  engine            = "mysql"
-  engine_version    = "8.0"
-  storage_type      = "gp2"
-  allocated_storage = 20
-  username = aws_ssm_parameter.db_username.value
-  password = aws_ssm_parameter.db_password.value
-  db_name = "ghostdb"
+  identifier          = "ghost"
+  instance_class      = "db.t3.micro"
+  engine              = "mysql"
+  engine_version      = "8.0"
+  storage_type        = "gp2"
+  allocated_storage   = 20
+  username            = aws_ssm_parameter.db_username.value
+  password            = aws_ssm_parameter.db_password.value
+  db_name             = "ghostdb"
   skip_final_snapshot = true
 
   db_subnet_group_name   = aws_db_subnet_group.ghost.name

@@ -11,10 +11,10 @@ resource "aws_launch_template" "ghost_launch_template" {
   #    LB_DNS_NAME = aws_lb.alb_ghost.dns_name
   #  }))
 
-    user_data = base64encode(templatefile("${path.module}/user_data_custom.sh", {
-      DB_HOST = aws_db_instance.ghost.address,
-      DB_NAME = aws_db_instance.ghost.db_name,
-    }))
+  user_data = base64encode(templatefile("${path.module}/user_data_custom.sh", {
+    DB_HOST = aws_db_instance.ghost.address,
+    DB_NAME = aws_db_instance.ghost.db_name,
+  }))
 
   iam_instance_profile {
     name = aws_iam_instance_profile.ghost_app.name

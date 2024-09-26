@@ -1,5 +1,6 @@
 data "http" "myip" {
-  url = "https://api.ipify.org"
+  url = "http://ifconfig.me/ip"
+  request_timeout_ms = 5000
 }
 
 data "aws_key_pair" "ghost_ec2_pool" {

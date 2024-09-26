@@ -1,5 +1,6 @@
 locals {
   vpc_name            = "${var.project_name}-vpc"
+  account_id          = data.aws_caller_identity.current.account_id
   public_subnet_1     = "${var.environment}-${var.project_name}-${var.region}-public-001"
   public_subnet_2     = "${var.environment}-${var.project_name}-${var.region}-public-002"
   public_subnet_3     = "${var.environment}-${var.project_name}-${var.region}-public-003"

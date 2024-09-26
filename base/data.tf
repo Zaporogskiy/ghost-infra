@@ -1,5 +1,5 @@
 data "http" "myip" {
-  url = "http://ifconfig.me/ip"
+  url                = "http://ifconfig.me/ip"
   request_timeout_ms = 5000
 }
 
@@ -21,3 +21,5 @@ data "aws_ami" "amazon_linux_x86_64" {
     values = ["x86_64"]
   }
 }
+
+data "aws_caller_identity" "current" {}

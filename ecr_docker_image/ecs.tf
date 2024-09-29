@@ -1,0 +1,42 @@
+resource "aws_ecs_cluster" "artem_cluster" {
+  name = "artem_cluster"
+}
+
+resource "aws_ecs_task_definition" "artem_task" {
+  family                   = "artem_task_family"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = jsonencode([
+    {
+      name      = "artem_app"
+      image     = "${aws_ecr_repository.artem_app.repository_url}:4.12.1"
+      essential = true
+      portMappings = [
+        {
+          containerPort = 80
+          hostPort      = 80
+          protocol      = "tcp"
+        },
+      ]
+    },
+  ])
+}
+
+resource "aws_ecs_service" "artem_service" {
+  name            = "artem_service"
+  cluster         = aws_ecs_cluster.artem_cluster.id
+  task_definition = aws_ecs_task_definition.artem_task.arn
+  desired_count   = 1
+
+  network_configuration {
+    subnets          = [aws_subnet.artem_private_subnet_1.id]
+    security_groups  = [aws_security_group.ecs_tasks_sg.id]
+    assign_public_ip = false
+  }
+
+  launch_type = "FARGATE"
+}

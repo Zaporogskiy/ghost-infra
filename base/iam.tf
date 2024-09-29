@@ -92,6 +92,13 @@ resource "aws_iam_role_policy" "ghost_ecs_policy" {
           "ecr:BatchCheckLayerAvailability",
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage",
+          "ecr:ListImages",
+          "ecr:ListTagsForResource",
+          "ecr:DescribeImages",
+          "ecr:DescribeRepositories",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:CreateLogGroup", // allow ECS tasks to create a new log group
           "elasticfilesystem:DescribeFileSystems",
           "elasticfilesystem:ClientMount",
           "elasticfilesystem:ClientWrite"

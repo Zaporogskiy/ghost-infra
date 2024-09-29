@@ -208,6 +208,30 @@ resource "aws_lb_target_group" "ghost_ec2_tg" {
   })
 }
 
+resource "aws_lb_target_group" "ghost_fargate_tg" {
+  name        = "ghost-fargate"
+  port        = 2368
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.cloudx.id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    path                = "/"
+    protocol            = "HTTP"
+    port                = "traffic-port"
+    healthy_threshold   = 2
+    unhealthy_threshold = 5
+    timeout             = 5
+    interval            = 120
+    matcher             = "200"
+  }
+
+  tags = merge(local.tags, {
+    Name = "ghost-fargate"
+  })
+}
+
 resource "aws_lb_listener" "alb_listener" {
   load_balancer_arn = aws_lb.alb_ghost.arn
   port              = 80
@@ -220,10 +244,109 @@ resource "aws_lb_listener" "alb_listener" {
   tags = local.tags
 }
 
+resource "aws_lb_listener_rule" "weighted_rule" {
+  listener_arn = aws_lb_listener.alb_listener.arn
+  priority     = 100
+
+  action {
+    type = "forward"
+    forward {
+      target_group {
+        arn    = aws_lb_target_group.ghost_ec2_tg.arn
+        weight = 50
+      }
+
+      target_group {
+        arn    = aws_lb_target_group.ghost_fargate_tg.arn
+        weight = 50
+      }
+    }
+  }
+
+  condition {
+    path_pattern {
+      values = ["*"]
+    }
+  }
+}
+
 resource "aws_db_subnet_group" "ghost" {
   name        = "ghost"
   description = "ghost database subnet group"
   subnet_ids  = [aws_subnet.private_db_a.id, aws_subnet.private_db_b.id, aws_subnet.private_db_c.id]
 
   tags = local.tags
+}
+
+# SSM
+resource "aws_vpc_endpoint" "ssm" {
+  vpc_id             = aws_vpc.cloudx.id
+  service_name       = "com.amazonaws.${var.region}.ssm"
+  vpc_endpoint_type  = "Interface"
+  security_group_ids = [aws_security_group.vpc_endpoint_sg.id]
+  subnet_ids         = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
+
+  tags = {
+    Name = "ssm-endpoint"
+  }
+}
+# ECR API
+resource "aws_vpc_endpoint" "ecr_api" {
+  vpc_id             = aws_vpc.cloudx.id
+  service_name       = "com.amazonaws.${var.region}.ecr.api"
+  vpc_endpoint_type  = "Interface"
+  security_group_ids = [aws_security_group.vpc_endpoint_sg.id]
+  subnet_ids         = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
+
+  tags = {
+    Name = "ecr-api-endpoint"
+  }
+}
+# ECR DKR
+resource "aws_vpc_endpoint" "ecr_dkr" {
+  vpc_id             = aws_vpc.cloudx.id
+  service_name       = "com.amazonaws.${var.region}.ecr.dkr"
+  vpc_endpoint_type  = "Interface"
+  security_group_ids = [aws_security_group.vpc_endpoint_sg.id]
+  subnet_ids         = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
+
+  tags = {
+    Name = "ecr-dkr-endpoint"
+  }
+}
+
+# EFS
+resource "aws_vpc_endpoint" "efs" {
+  vpc_id             = aws_vpc.cloudx.id
+  service_name       = "com.amazonaws.${var.region}.elasticfilesystem"
+  vpc_endpoint_type  = "Interface"
+  security_group_ids = [aws_security_group.vpc_endpoint_sg.id]
+  subnet_ids         = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
+
+  tags = {
+    Name = "efs-endpoint"
+  }
+}
+# CloudWatch Logs
+resource "aws_vpc_endpoint" "logs" {
+  vpc_id             = aws_vpc.cloudx.id
+  service_name       = "com.amazonaws.${var.region}.logs"
+  vpc_endpoint_type  = "Interface"
+  security_group_ids = [aws_security_group.vpc_endpoint_sg.id]
+  subnet_ids         = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
+
+  tags = {
+    Name = "logs-endpoint"
+  }
+}
+# S3 Gateway Endpoint
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = aws_vpc.cloudx.id
+  service_name      = "com.amazonaws.${var.region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = [aws_route_table.private_rt.id]
+
+  tags = {
+    Name = "s3-endpoint"
+  }
 }

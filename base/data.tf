@@ -1,5 +1,5 @@
 data "http" "myip" {
-  url                = "http://ifconfig.me/ip"
+  url                = "https://api.ipify.org"
   request_timeout_ms = 5000
 }
 

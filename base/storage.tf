@@ -39,6 +39,8 @@ resource "aws_db_instance" "ghost" {
   vpc_security_group_ids = [aws_security_group.mysql.id]
 
   tags = local.tags
+
+  depends_on = [random_password.db_password, aws_ssm_parameter.db_username, aws_ssm_parameter.db_password]
 }
 
 resource "random_password" "db_password" {

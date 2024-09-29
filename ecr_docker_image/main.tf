@@ -1,42 +1,3 @@
-resource "aws_ecr_repository" "artem_ecr" {
-  name = "ghost"
-
-  image_tag_mutability = "MUTABLE"
-
-  image_scanning_configuration {
-    scan_on_push = false
-  }
-
-  encryption_configuration {
-    encryption_type = "AES256"
-  }
-  force_delete = true
-}
-
-resource "null_resource" "docker_image" {
-  triggers = {
-    always_run = "${timestamp()}"
-  }
-
-  provisioner "local-exec" {
-    command     = <<EOT
-      # Exit on any error
-      set -e
-      # Login to AWS ECR
-      LOGIN_CMD=$(aws ecr get-login-password --region ${var.region} | docker login --username AWS --password-stdin ${local.account_id}.dkr.ecr.${var.region}.amazonaws.com/ghost)
-      if [ $? -ne 0 ]; then
-        echo "Failed to login to Docker ECR"
-        exit 1
-      fi
-      docker build -t ${local.account_id}.dkr.ecr.${var.region}.amazonaws.com/ghost:4.12.1 .
-      docker push ${local.account_id}.dkr.ecr.${var.region}.amazonaws.com/ghost:4.12.1
-    EOT
-    interpreter = ["/bin/bash", "-c"]
-  }
-
-  depends_on = [aws_ecr_repository.artem_ecr]
-}
-
 resource "aws_ecs_cluster" "ghost" {
   name = "ghost"
   setting {
@@ -97,19 +58,19 @@ resource "aws_ecs_service" "ghost" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    assign_public_ip = true
+    assign_public_ip = false
     subnets          = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
     security_groups  = ["${aws_security_group.fargate_pool.id}"]
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.ghost_fargate_tg.arn
-    container_name   = "ghost_container"
-    container_port   = 2368
-  }
+  #  load_balancer {
+  #    target_group_arn = aws_lb_target_group.ghost_fargate_tg.arn
+  #    container_name   = "ghost_container"
+  #    container_port   = 2368
+  #  }
 
   depends_on = [
-    aws_lb_listener.alb_listener,
+    #    aws_lb_listener.alb_listener,
     aws_ecs_task_definition.task_def_ghost
   ]
 }

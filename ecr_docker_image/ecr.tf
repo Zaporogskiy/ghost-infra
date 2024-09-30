@@ -5,6 +5,7 @@ resource "aws_ecr_repository" "artem_app" {
   image_scanning_configuration {
     scan_on_push = true
   }
+  force_delete = true
 }
 
 resource "null_resource" "docker_image" {

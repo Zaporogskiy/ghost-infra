@@ -10,6 +10,11 @@ resource "aws_ecs_task_definition" "artem_task" {
   cpu                      = "256"
   memory                   = "512"
 
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture = "ARM64"
+  }
+
   container_definitions = jsonencode([
     {
       name      = "artem_app"
@@ -21,8 +26,16 @@ resource "aws_ecs_task_definition" "artem_task" {
           hostPort      = 80
           protocol      = "tcp"
         },
-      ]
-    },
+      ],
+      logConfiguration = {
+        "logDriver" : "awslogs",
+        "options" : {
+          "awslogs-group" : "/ecs/artem_task_logs",
+          "awslogs-region" : "us-east-1",
+          "awslogs-stream-prefix" : "ecs"
+        }
+      }
+    }
   ])
 }
 

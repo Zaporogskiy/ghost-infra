@@ -45,20 +45,20 @@ resource "aws_route_table_association" "private_a_association" {
 # todo ---- VPC Endpoints ------
 resource "aws_vpc_endpoint" "ecr_api" {
   vpc_id              = aws_vpc.artem_vpc.id
+  private_dns_enabled = true
   service_name        = "com.amazonaws.${var.region}.ecr.api"
   vpc_endpoint_type   = "Interface"
   subnet_ids          = [aws_subnet.artem_private_subnet_1.id]
   security_group_ids  = [aws_security_group.ecr_vpc_endpoint_sg.id]
-  private_dns_enabled = true
 }
 
 resource "aws_vpc_endpoint" "ecr_dkr" {
   vpc_id              = aws_vpc.artem_vpc.id
+  private_dns_enabled = true
   service_name        = "com.amazonaws.${var.region}.ecr.dkr"
   vpc_endpoint_type   = "Interface"
   subnet_ids          = [aws_subnet.artem_private_subnet_1.id]
   security_group_ids  = [aws_security_group.ecr_vpc_endpoint_sg.id]
-  private_dns_enabled = true
 }
 
 resource "aws_vpc_endpoint" "s3" {
@@ -67,4 +67,31 @@ resource "aws_vpc_endpoint" "s3" {
   vpc_endpoint_type = "Gateway"
 
   route_table_ids = [aws_route_table.private_rt.id]
+}
+
+# CloudWatch Logs
+resource "aws_vpc_endpoint" "ecr_logs" {
+  vpc_id              = aws_vpc.artem_vpc.id
+  private_dns_enabled = true
+  service_name        = "com.amazonaws.${var.region}.logs"
+  vpc_endpoint_type   = "Interface"
+  security_group_ids  = [aws_security_group.ecr_vpc_endpoint_sg.id]
+  subnet_ids          = [aws_subnet.artem_private_subnet_1.id]
+
+  tags = {
+    Name = "logs-endpoint"
+  }
+}
+# SSM
+resource "aws_vpc_endpoint" "ssm" {
+  vpc_id              = aws_vpc.artem_vpc.id
+  private_dns_enabled = true
+  service_name        = "com.amazonaws.${var.region}.ssm"
+  vpc_endpoint_type   = "Interface"
+  security_group_ids  = [aws_security_group.ecr_vpc_endpoint_sg.id]
+  subnet_ids          = [aws_subnet.artem_private_subnet_1.id]
+
+  tags = {
+    Name = "ssm-endpoint"
+  }
 }

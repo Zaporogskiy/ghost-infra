@@ -12,7 +12,7 @@ resource "aws_ecs_task_definition" "artem_task" {
 
   runtime_platform {
     operating_system_family = "LINUX"
-    cpu_architecture = "ARM64"
+    cpu_architecture        = "ARM64"
   }
 
   container_definitions = jsonencode([
@@ -22,8 +22,8 @@ resource "aws_ecs_task_definition" "artem_task" {
       essential = true
       portMappings = [
         {
-          containerPort = 80
-          hostPort      = 80
+          containerPort = 2368
+          hostPort      = 2368
           protocol      = "tcp"
         },
       ],
@@ -46,9 +46,15 @@ resource "aws_ecs_service" "artem_service" {
   desired_count   = 1
 
   network_configuration {
-    subnets          = [aws_subnet.artem_private_subnet_1.id]
+    subnets          = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
     security_groups  = [aws_security_group.ecs_tasks_sg.id]
     assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.ghost_fargate_tg.arn
+    container_name   = "artem_app"
+    container_port   = 2368
   }
 
   launch_type = "FARGATE"

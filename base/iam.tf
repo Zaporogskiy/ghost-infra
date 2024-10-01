@@ -1,4 +1,4 @@
-
+# EC2 Role
 resource "aws_iam_role" "ghost_app_role" {
   name = "ghost_app"
   assume_role_policy = jsonencode({
@@ -63,26 +63,31 @@ resource "aws_iam_instance_profile" "ghost_app" {
   tags = local.tags
 }
 
+# ECS role
 resource "aws_iam_role" "ghost_ecs_role" {
-  name = "ghost_ecs"
+  name = "ghost_ecs_role"
+
   assume_role_policy = jsonencode({
-    Version = "2012-10-17",
+    Version = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRole",
-        Effect = "Allow",
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
         Principal = {
           Service = "ecs-tasks.amazonaws.com"
         }
-      }
+      },
     ]
   })
-  tags = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ghost_ecs_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
 resource "aws_iam_role_policy" "ghost_ecs_policy" {
-  name = "ghost_ecs_policy"
-  role = aws_iam_role.ghost_ecs_role.id
+  role = aws_iam_role.ghost_ecs_role.name
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -98,7 +103,7 @@ resource "aws_iam_role_policy" "ghost_ecs_policy" {
           "ecr:DescribeRepositories",
           "logs:CreateLogStream",
           "logs:PutLogEvents",
-          "logs:CreateLogGroup", // allow ECS tasks to create a new log group
+          "logs:CreateLogGroup",
           "elasticfilesystem:DescribeFileSystems",
           "elasticfilesystem:ClientMount",
           "elasticfilesystem:ClientWrite"
@@ -110,8 +115,24 @@ resource "aws_iam_role_policy" "ghost_ecs_policy" {
   })
 }
 
-resource "aws_iam_instance_profile" "ghost_ecs" {
-  name = "ghost_ecs"
-  role = aws_iam_role.ghost_ecs_role.name
-  tags = local.tags
+resource "aws_iam_policy" "ecs_logging" {
+  name        = "ecs_logging_policy"
+  description = "Allow ECS tasks to send logs to CloudWatch Logs"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Action = [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      Resource = "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/ghost_task_logs:*"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_logging_attachment" {
+  role       = aws_iam_role.ghost_ecs_role.name
+  policy_arn = aws_iam_policy.ecs_logging.arn
 }

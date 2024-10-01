@@ -171,105 +171,6 @@ resource "aws_route_table_association" "private_db_c_association" {
   route_table_id = aws_route_table.private_rt.id
 }
 
-resource "aws_lb" "alb_ghost" {
-  name               = "alb-ghost"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb_sg.id]
-  subnets            = [aws_subnet.public_a.id, aws_subnet.public_b.id, aws_subnet.public_c.id]
-
-  tags = merge(local.tags, {
-    Name = "alb-ghost"
-  })
-}
-
-resource "aws_lb_target_group" "ghost_ec2_tg" {
-  name        = "ghost-ec2"
-  port        = 2368
-  protocol    = "HTTP"
-  vpc_id      = aws_vpc.cloudx.id
-  target_type = "instance"
-  slow_start  = "600"
-
-  health_check {
-    enabled             = true
-    path                = "/"
-    protocol            = "HTTP"
-    port                = "traffic-port"
-    healthy_threshold   = 2
-    unhealthy_threshold = 5
-    timeout             = 5
-    interval            = 120
-    matcher             = "200"
-  }
-
-  tags = merge(local.tags, {
-    Name = "ghost-ec2"
-  })
-}
-
-resource "aws_lb_target_group" "ghost_fargate_tg" {
-  name        = "ghost-fargate"
-  port        = 2368
-  protocol    = "HTTP"
-  vpc_id      = aws_vpc.cloudx.id
-  target_type = "ip"
-
-  health_check {
-    enabled             = true
-    path                = "/"
-    protocol            = "HTTP"
-    port                = "traffic-port"
-    healthy_threshold   = 2
-    unhealthy_threshold = 5
-    timeout             = 5
-    interval            = 120
-    matcher             = "200"
-  }
-
-  tags = merge(local.tags, {
-    Name = "ghost-fargate"
-  })
-}
-
-resource "aws_lb_listener" "alb_listener" {
-  load_balancer_arn = aws_lb.alb_ghost.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.ghost_ec2_tg.arn
-  }
-  tags = local.tags
-}
-
-resource "aws_lb_listener_rule" "weighted_rule" {
-  listener_arn = aws_lb_listener.alb_listener.arn
-  priority     = 100
-
-  action {
-    type = "forward"
-    forward {
-      target_group {
-        arn    = aws_lb_target_group.ghost_ec2_tg.arn
-        weight = 50
-      }
-
-      target_group {
-        arn    = aws_lb_target_group.ghost_fargate_tg.arn
-        weight = 50
-      }
-    }
-  }
-
-  condition {
-    path_pattern {
-      values = ["*"]
-    }
-  }
-}
-
 resource "aws_db_subnet_group" "ghost" {
   name        = "ghost"
   description = "ghost database subnet group"
@@ -278,75 +179,56 @@ resource "aws_db_subnet_group" "ghost" {
   tags = local.tags
 }
 
-# SSM
-resource "aws_vpc_endpoint" "ssm" {
-  vpc_id             = aws_vpc.cloudx.id
-  service_name       = "com.amazonaws.${var.region}.ssm"
-  vpc_endpoint_type  = "Interface"
-  security_group_ids = [aws_security_group.vpc_endpoint_sg.id]
-  subnet_ids         = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
-
-  tags = {
-    Name = "ssm-endpoint"
-  }
-}
+# VPC Endpoints
 # ECR API
 resource "aws_vpc_endpoint" "ecr_api" {
-  vpc_id             = aws_vpc.cloudx.id
-  service_name       = "com.amazonaws.${var.region}.ecr.api"
-  vpc_endpoint_type  = "Interface"
-  security_group_ids = [aws_security_group.vpc_endpoint_sg.id]
-  subnet_ids         = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
-
-  tags = {
-    Name = "ecr-api-endpoint"
-  }
+  vpc_id              = aws_vpc.cloudx.id
+  private_dns_enabled = true
+  service_name        = "com.amazonaws.${var.region}.ecr.api"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
+  security_group_ids  = [aws_security_group.ecr_vpc_endpoint_sg.id]
 }
 # ECR DKR
 resource "aws_vpc_endpoint" "ecr_dkr" {
-  vpc_id             = aws_vpc.cloudx.id
-  service_name       = "com.amazonaws.${var.region}.ecr.dkr"
-  vpc_endpoint_type  = "Interface"
-  security_group_ids = [aws_security_group.vpc_endpoint_sg.id]
-  subnet_ids         = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
-
-  tags = {
-    Name = "ecr-dkr-endpoint"
-  }
-}
-
-# EFS
-resource "aws_vpc_endpoint" "efs" {
-  vpc_id             = aws_vpc.cloudx.id
-  service_name       = "com.amazonaws.${var.region}.elasticfilesystem"
-  vpc_endpoint_type  = "Interface"
-  security_group_ids = [aws_security_group.vpc_endpoint_sg.id]
-  subnet_ids         = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
-
-  tags = {
-    Name = "efs-endpoint"
-  }
-}
-# CloudWatch Logs
-resource "aws_vpc_endpoint" "logs" {
-  vpc_id             = aws_vpc.cloudx.id
-  service_name       = "com.amazonaws.${var.region}.logs"
-  vpc_endpoint_type  = "Interface"
-  security_group_ids = [aws_security_group.vpc_endpoint_sg.id]
-  subnet_ids         = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
-
-  tags = {
-    Name = "logs-endpoint"
-  }
+  vpc_id              = aws_vpc.cloudx.id
+  private_dns_enabled = true
+  service_name        = "com.amazonaws.${var.region}.ecr.dkr"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
+  security_group_ids  = [aws_security_group.ecr_vpc_endpoint_sg.id]
 }
 # S3 Gateway Endpoint
 resource "aws_vpc_endpoint" "s3" {
   vpc_id            = aws_vpc.cloudx.id
   service_name      = "com.amazonaws.${var.region}.s3"
   vpc_endpoint_type = "Gateway"
-  route_table_ids   = [aws_route_table.private_rt.id]
+
+  route_table_ids = [aws_route_table.private_rt.id]
+}
+# CloudWatch Logs
+resource "aws_vpc_endpoint" "ecr_logs" {
+  vpc_id              = aws_vpc.cloudx.id
+  private_dns_enabled = true
+  service_name        = "com.amazonaws.${var.region}.logs"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
+  security_group_ids  = [aws_security_group.ecr_vpc_endpoint_sg.id]
 
   tags = {
-    Name = "s3-endpoint"
+    Name = "logs-endpoint"
+  }
+}
+# SSM
+resource "aws_vpc_endpoint" "ssm" {
+  vpc_id              = aws_vpc.cloudx.id
+  private_dns_enabled = true
+  service_name        = "com.amazonaws.${var.region}.ssm"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [aws_subnet.private_a.id, aws_subnet.private_b.id, aws_subnet.private_c.id]
+  security_group_ids  = [aws_security_group.ecr_vpc_endpoint_sg.id]
+
+  tags = {
+    Name = "ssm-endpoint"
   }
 }

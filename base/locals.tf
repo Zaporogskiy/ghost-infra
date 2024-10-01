@@ -10,7 +10,6 @@ locals {
   private_db_subnet_1 = "${var.environment}-${var.project_name}-${var.region}-db-private-001"
   private_db_subnet_2 = "${var.environment}-${var.project_name}-${var.region}-db-private-002"
   private_db_subnet_3 = "${var.environment}-${var.project_name}-${var.region}-db-private-003"
-  ecr_repository_uri  = "${aws_ecr_repository.artem_ecr.repository_url}:4.12.1"
 
   tags = {
     Project = var.project_name

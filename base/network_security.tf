@@ -103,55 +103,11 @@ resource "aws_security_group" "efs" {
   tags = local.tags
 }
 
-resource "aws_security_group" "fargate_pool" {
-  name        = "fargate_pool"
-  description = "Allows access for Fargate instances"
-  vpc_id      = aws_vpc.cloudx.id
-
-  # Ingress rule for HTTP traffic on port 2368 from ALB
-  ingress {
-    from_port       = 2368
-    to_port         = 2368
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb_sg.id]
-  }
-
-  # Default egress rule to allow all outbound traffic
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = local.tags
-}
-
-resource "aws_security_group_rule" "efs_from_fargate" {
-  type                     = "ingress"
-  from_port                = 2049
-  to_port                  = 2049
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.efs.id
-  source_security_group_id = aws_security_group.fargate_pool.id
-}
-
-# Rule for Fargate allowing access to EFS
-resource "aws_security_group_rule" "fargate_to_efs" {
-  type                     = "egress"
-  from_port                = 2049
-  to_port                  = 2049
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.fargate_pool.id
-  source_security_group_id = aws_security_group.efs.id
-}
-
 resource "aws_security_group" "mysql" {
   name        = "mysql"
   description = "defines access to ghost db"
   vpc_id      = aws_vpc.cloudx.id
 
-  # Ingress rule
   ingress {
     from_port       = 3306
     to_port         = 3306
@@ -159,15 +115,6 @@ resource "aws_security_group" "mysql" {
     security_groups = [aws_security_group.ec2_pool_sg.id]
   }
 
-  # New Ingress rule for Fargate
-  ingress {
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.fargate_pool.id]
-  }
-
-  # Default egress rule to allow all outbound traffic
   egress {
     from_port   = 0
     to_port     = 0
@@ -178,10 +125,37 @@ resource "aws_security_group" "mysql" {
   tags = local.tags
 }
 
-resource "aws_security_group" "vpc_endpoint_sg" {
-  name        = "vpc_endpoint_sg"
-  description = "Security group for interface-type VPC endpoints"
+resource "aws_security_group" "fargate_pool" {
+  name        = "fargate_pool"
+  description = "Allows access for Fargate instances"
   vpc_id      = aws_vpc.cloudx.id
+
+  ingress {
+    from_port       = 2368
+    to_port         = 2368
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "ecr_vpc_endpoint_sg" {
+  name        = "ecr_vpc_endpoint_sg"
+  description = "Security Group for ECR VPC Endpoints"
+  vpc_id      = aws_vpc.cloudx.id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   egress {
     from_port   = 0

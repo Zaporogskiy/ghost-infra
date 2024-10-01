@@ -56,6 +56,8 @@ resource "aws_autoscaling_group" "ghost_ec2_pool_asg" {
     value               = "ghost-instance"
     propagate_at_launch = true
   }
+
+  depends_on = [aws_db_instance.ghost]
 }
 
 resource "aws_instance" "bastion" {

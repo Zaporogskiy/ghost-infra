@@ -92,7 +92,6 @@ resource "aws_route_table_association" "private_c_association" {
   route_table_id = aws_route_table.private_rt.id
 }
 
-# todo ---- VPC Endpoints ------
 resource "aws_vpc_endpoint" "ecr_api" {
   vpc_id              = aws_vpc.artem_vpc.id
   private_dns_enabled = true
@@ -118,7 +117,7 @@ resource "aws_vpc_endpoint" "s3" {
 
   route_table_ids = [aws_route_table.private_rt.id]
 }
-# CloudWatch Logs
+
 resource "aws_vpc_endpoint" "ecr_logs" {
   vpc_id              = aws_vpc.artem_vpc.id
   private_dns_enabled = true
@@ -131,7 +130,7 @@ resource "aws_vpc_endpoint" "ecr_logs" {
     Name = "logs-endpoint"
   }
 }
-# SSM
+
 resource "aws_vpc_endpoint" "ssm" {
   vpc_id              = aws_vpc.artem_vpc.id
   private_dns_enabled = true

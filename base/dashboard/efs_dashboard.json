@@ -1,0 +1,38 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          ["AWS/EFS", "ClientConnections", "FileSystemId", "${file_system_id}"]
+        ],
+        "period": 300,
+        "stat": "Average",
+        "region": "${aws_region}",
+        "title": "Client Connections"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          ["AWS/EFS", "DataReadIOBytes", "FileSystemId", "${file_system_id}"],
+          [".", "DataWriteIOBytes", ".", "."]
+        ],
+        "period": 300,
+        "stat": "Sum",
+        "unit": "Bytes",
+        "region": "${aws_region}",
+        "title": "Storage Bytes (Read/Write)"
+      }
+    }
+  ]
+}

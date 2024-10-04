@@ -1,0 +1,20 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          ["AWS/EC2", "CPUUtilization", "AutoScalingGroupName", "${auto_scaling_group_name}"]
+        ],
+        "period": 300,
+        "stat": "Average",
+        "region": "${region_name}",
+        "title": "Average CPU Utilization"
+      }
+    }
+  ]
+}
